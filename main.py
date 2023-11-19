@@ -58,13 +58,13 @@ class Main:
                     col = location[0]//SQSIZE
                     row = location[1]//SQSIZE
                     self.selectedSquare = (row, col)
-                    if self.isPlayer1Turn and self.game_state._isValidMove(row, col):
+                    if self.isPlayer1Turn and self.game_state._isValidMove(row, col) and not self.game_state._isGameOver():
                         self.game_state.board[row][col] = 'X'
                         self.isPlayer1Turn = False 
                         for row in self.game_state.board:
                             print(row)
                         
-                    elif not self.isPlayer1Turn and self.game_state._isValidMove(row, col):
+                    elif not self.isPlayer1Turn and self.game_state._isValidMove(row, col) and not self.game_state._isGameOver():
                         self.game_state.board[row][col] = 'O'
                         self.isPlayer1Turn = True
                         for row in self.game_state.board:
