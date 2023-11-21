@@ -3,6 +3,7 @@ import sys
 import os
 from const import *
 from engine import GameState
+from QLearningAgent import QLearningAgent
 
 class Main:
     def __init__(self):
@@ -11,7 +12,10 @@ class Main:
         self.playerClicked = []
         self.selectedSquare = ()
         self.game_state = GameState()
+        self.agent = QLearningAgent()
         self.isPlayer1Turn = True
+        self.isHumanTurn = True
+        self.isAITurn = False
         self.images = {'X': None, 'O': None}
         self.loadImage()
         pygame.display.set_caption("Caro AI")
@@ -58,18 +62,14 @@ class Main:
                     col = location[0]//SQSIZE
                     row = location[1]//SQSIZE
                     self.selectedSquare = (row, col)
-                    if self.isPlayer1Turn and self.game_state._isValidMove(row, col) and not self.game_state._isGameOver():
+                    if self.isPlayer1Turn and not self.game_state.isGameOver():
                         self.game_state.board[row][col] = 'X'
-                        self.isPlayer1Turn = False 
-                        for row in self.game_state.board:
-                            print(row)
-                        
-                    elif not self.isPlayer1Turn and self.game_state._isValidMove(row, col) and not self.game_state._isGameOver():
+                        self.isPlayer1Turn = False
+                    elif not self.game_state.isGameOver():
                         self.game_state.board[row][col] = 'O'
                         self.isPlayer1Turn = True
-                        for row in self.game_state.board:
-                            print(row)
-                        
+                    
+
                 
 main = Main()
 main.mainloop()

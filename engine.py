@@ -2,29 +2,33 @@ from const import *
 class GameState:
     def __init__(self):
         self.board = [['--' for _ in range(COLS)] for _ in range(ROWS)]
+        self.players = ['X', 'O']
+        self.current_player =  self.players[0]
+        self.game_over = False
+        self.winner = None
 
-    def _isValidMove(self, row, col):
+    def isValidMove(self, row, col):
         return self.board[row][col]=='--'
     
-    def _isGameOver(self):
-        return self._checkInARow(WINNING_COUNT, 'X') or self._checkInARow(WINNING_COUNT, 'O')
+    def isGameOver(self):
+        return self.checkInARow(WINNING_COUNT, self.players[0]) or self.checkInARow(WINNING_COUNT, self.players[1])
 
-    def _isBoardFull(self):
+    def isBoardFull(self):
         for row in self.board:
             for piece in row:
                 if piece == '--':
                     return False
         return True
 
-    def _checkInARow(self, N, player):
-        #check row
+    def checkInARow(self, N, player):
         for row in self.board:
             count = 0
             for piece in row:
                 if piece == player:
                     count += 1
                     if count == N:
-                        print(player + " is win")
+                        self.game_over = True
+                        self.winner = player
                         return True
                 else:
                     count = 0
@@ -35,7 +39,8 @@ class GameState:
                 if self.board[row][col] == player:
                     count += 1
                     if count == N:
-                        print(player + " is win")
+                        self.game_over = True
+                        self.winner = player
                         return True
                 else:
                     count = 0
@@ -47,7 +52,8 @@ class GameState:
                     if self.board[row + i][col + i] == player:
                         count += 1
                         if count == N:
-                            print(player + " is win")
+                            self.game_over = True
+                            self.winner = player
                             return True
                     else:
                         count = 0
@@ -60,7 +66,47 @@ class GameState:
                     if self.board[row - i][col + i] == player:
                         count += 1
                         if count == N:
-                            print(player + " is win")
+                            self.game_over = True
+                            self.winner = player
                             return True
                     else:
                         count = 0
+    
+    def switch_player(self):
+        if self.current_player == self.players[0]:
+            self.current_player = self.players[1]
+        else:
+            self.current_player = self.players[0]
+    
+    def avaiable_moves(self):#action set
+        moves = []
+        for i in range (ROWS):
+            for j in range (COLS):
+                if self.board[i][j] == '--':
+                    moves.append((i, j))
+        return moves
+    
+    def make_move(self, move):#action
+        row, col = move
+
+        if self.isValidMove(row, col):
+            self.board[row][col] = self.current_player
+
+            if self.checkInARow(WINNING_COUNT, self.current_player):
+                self.game_over = True
+                self.winner = self.current_player
+            elif self.isBoardFull():
+                self.game_over = True
+
+            self.switch_player()
+        else:
+            print("Invalid move. Try again.")
+    
+    def get_state(self):
+        return self
+    
+
+
+
+
+
