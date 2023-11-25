@@ -12,7 +12,8 @@ class Main:
         self.playerClicked = []
         self.selectedSquare = ()
         self.game_state = GameState()
-        self.agent = QLearningAgent()
+        self.agent = QLearningAgent(0.5, 0.1, 0.9)
+        self.agent.train(100)
         self.isPlayer1Turn = True
         self.isHumanTurn = True
         self.isAITurn = False
@@ -49,8 +50,8 @@ class Main:
         pygame.display.flip()
 
     def mainloop(self):
-        #self.drawBoard(self.screen)
-        #pygame.display.flip()
+        self.drawBoard(self.screen)
+        pygame.display.flip()
         while True:
             self.drawGameState(self.screen, self.game_state)
             for event in pygame.event.get():
@@ -61,13 +62,29 @@ class Main:
                     location = pygame.mouse.get_pos()
                     col = location[0]//SQSIZE
                     row = location[1]//SQSIZE
-                    self.selectedSquare = (row, col)
-                    if self.isPlayer1Turn and not self.game_state.isGameOver():
+                    #self.selectedSquare(row, col)
+                    if self.isHumanTurn and not self.game_state.isGameOver() and self.game_state.isValidMove(row, col):
                         self.game_state.board[row][col] = 'X'
-                        self.isPlayer1Turn = False
-                    elif not self.game_state.isGameOver():
-                        self.game_state.board[row][col] = 'O'
-                        self.isPlayer1Turn = True
+                        AI_best_move = self.agent.best_move(self.game_state)
+                        if not self.game_state.isGameOver():
+                            if not self.game_state.isBoardFull():
+                                AI_row, AI_col = AI_best_move
+                                self.game_state.board[AI_row][AI_col] = 'O'
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        self.game_state = GameState()       
+                #     self.selectedSquare = (row, col)
+                # elif event.type == pygame.MOUSEBUTTONDOWN:
+                #     location = pygame.mouse.get_pos()
+                #     col = location[0]//SQSIZE
+                #     row = location[1]//SQSIZE
+                #     self.selectedSquare = (row, col)
+                #     if self.isPlayer1Turn and not self.game_state.isGameOver():
+                #         self.game_state.board[row][col] = 'X'
+                #         self.isPlayer1Turn = False
+                #     elif not self.game_state.isGameOver():
+                #         self.game_state.board[row][col] = 'O'
+                #         self.isPlayer1Turn = True
                     
 
                 

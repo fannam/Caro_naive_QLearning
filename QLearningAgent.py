@@ -22,7 +22,8 @@ class QLearningAgent:
             return avaiable_moves[index]
         else:
             Q_value = [self.get_Q_value(state, move) for move in avaiable_moves]
-            return avaiable_moves[np.argmax(Q_value)]
+            index = np.argmax(Q_value)
+            return avaiable_moves[index]
     
     def update_Q_value(self, state, action, reward, next_state):
         state_str = self.state_to_string(state)
@@ -37,30 +38,54 @@ class QLearningAgent:
             reward = 0
             while not state.isGameOver() and not state.isBoardFull():
                 available_moves = state.avaiable_moves()
-                if not available_moves:
+                if len(available_moves)==0:
                     break
                 action = self.choose_action(state, available_moves)
                 state.make_move(action)
                 next_state = state
-                self.update_Q_value(state, action, reward, next_state)
+                next_avaiable_moves = next_state.avaiable_moves()
+                #self.update_Q_value(state, action, reward, next_state)
+                state_str = self.state_to_string(state)
+                if next_avaiable_moves:
+                    self.update_Q_value(state, action, reward, next_state)
+                    # best_next_Q = np.max([self.get_Q_value(next_state, move) for move in next_avaiable_moves])
+                    # current_Q_value = self.get_Q_value(state, action)
+                    # new_Q_value = (1 - self.alpha) * current_Q_value + self.alpha * (reward + self.discount_factor * best_next_Q)
+                    # self.Q[(state_str, action)] = new_Q_value
             if state.winner == 'X':
-                reward = 1.0
+                reward = np.random.uniform(1, 10)
             elif state.isBoardFull():
                 reward = 0.0
             else:
-                reward = -1.0
-            
+                reward = -np.random.uniform(1, 10)
             # for row in state.board:
-            #     print(row)
+            #     print(row) 
             print(f"Episode {episode + 1}/{num_episodes}, Winner: {state.winner}, Q-value updates: {len(self.Q)}")    
+    def best_move(self, state):
+        available_moves = state.avaiable_moves()
+        if len(available_moves) == 0:
+            return None  # No available moves
+
+        Q_values = [self.get_Q_value(state, move) for move in available_moves]
+        best_move_index = np.argmax(Q_values)
+        return available_moves[best_move_index]
+    
     def play(self):
-        game = GameState()
-        while not game.game_over:
-            available_moves = game.avaiable_moves()
-            action = self.choose_action(game, available_moves)
-            game.make_move(action)
-            for row in game.board:
-                print(row)           
-caro_ai = QLearningAgent(0.1, 0.3, 0.9)
-caro_ai.train(5)
-caro_ai.play()
+        counter = 0
+        while(counter<10):
+            state = GameState()
+            while not state.isGameOver() and not state.isBoardFull():
+                best_action = self.best_move(state)
+                if best_action is None:
+                    break
+                state.make_move(best_action)
+                for row in state.board:
+                    print(row)
+                print("--------")
+            print(f"Game Over. Winner: {state.winner}")
+            counter+=1
+
+agent = QLearningAgent(0.5, 0.3, 0.9)
+agent.train(100)
+
+                      
