@@ -12,11 +12,11 @@ class Main:
         self.playerClicked = []
         self.selectedSquare = ()
         self.game_state = GameState()
-        self.agent = QLearningAgent(0.5, 0.1, 0.9)
-        self.agent.train(100)
+        self.agent = QLearningAgent(0.2, 0.15, 0.99)
+        self.agent.train(10000)
         self.isPlayer1Turn = True
-        self.isHumanTurn = True
-        self.isAITurn = False
+        self.isHumanTurn = False
+        self.isAITurn = True
         self.images = {'X': None, 'O': None}
         self.loadImage()
         pygame.display.set_caption("Caro AI")
@@ -54,6 +54,14 @@ class Main:
         pygame.display.flip()
         while True:
             self.drawGameState(self.screen, self.game_state)
+            
+            if self.isAITurn and not (self.game_state.isGameOver() or self.game_state.isBoardFull()):
+                AI_best_move = self.agent.best_move(self.game_state)
+                AI_row, AI_col = AI_best_move
+                self.game_state.board[AI_row][AI_col] = 'X'
+                self.isAITurn = False
+                self.isHumanTurn = True
+                self.drawBoard(self.screen)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -62,29 +70,24 @@ class Main:
                     location = pygame.mouse.get_pos()
                     col = location[0]//SQSIZE
                     row = location[1]//SQSIZE
-                    #self.selectedSquare(row, col)
-                    if self.isHumanTurn and not self.game_state.isGameOver() and self.game_state.isValidMove(row, col):
-                        self.game_state.board[row][col] = 'X'
-                        AI_best_move = self.agent.best_move(self.game_state)
-                        if not self.game_state.isGameOver():
-                            if not self.game_state.isBoardFull():
-                                AI_row, AI_col = AI_best_move
-                                self.game_state.board[AI_row][AI_col] = 'O'
+                    if self.game_state.isValidMove(row, col) and not self.game_state.isGameOver():
+                        self.game_state.board[row][col] = 'O'
+                        self.isAITurn = True
+                        self.isHumanTurn = False
+                #     #self.selectedSquare(row, col)
+                #     if self.isHumanTurn and not self.game_state.isGameOver() and self.game_state.isValidMove(row, col):
+                #         self.game_state.board[row][col] = 'X'
+                #         AI_best_move = self.agent.best_move(self.game_state)
+                #         if not self.game_state.isGameOver():
+                #             if not self.game_state.isBoardFull():
+                #                 AI_row, AI_col = AI_best_move
+                #                 self.game_state.board[AI_row][AI_col] = 'O'
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:
-                        self.game_state = GameState()       
-                #     self.selectedSquare = (row, col)
-                # elif event.type == pygame.MOUSEBUTTONDOWN:
-                #     location = pygame.mouse.get_pos()
-                #     col = location[0]//SQSIZE
-                #     row = location[1]//SQSIZE
-                #     self.selectedSquare = (row, col)
-                #     if self.isPlayer1Turn and not self.game_state.isGameOver():
-                #         self.game_state.board[row][col] = 'X'
-                #         self.isPlayer1Turn = False
-                #     elif not self.game_state.isGameOver():
-                #         self.game_state.board[row][col] = 'O'
-                #         self.isPlayer1Turn = True
+                        self.game_state = GameState()   
+                        self.isAITurn = True
+                        self.isHumanTurn = False    
+
                     
 
                 

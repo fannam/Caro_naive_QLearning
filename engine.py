@@ -78,7 +78,7 @@ class GameState:
         else:
             self.current_player = self.players[0]
     
-    def avaiable_moves(self):#action set
+    def available_moves(self):#action set
         moves = []
         for i in range (ROWS):
             for j in range (COLS):
