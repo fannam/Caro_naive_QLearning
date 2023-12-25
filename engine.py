@@ -6,6 +6,7 @@ class GameState:
         self.current_player =  self.players[0]
         self.game_over = False
         self.winner = None
+        self.trace_move = []
 
     def isValidMove(self, row, col):
         return self.board[row][col]=='--'
@@ -88,7 +89,7 @@ class GameState:
     
     def make_move(self, move):#action
         row, col = move
-
+        self.last_move = move
         if self.isValidMove(row, col):
             self.board[row][col] = self.current_player
 
@@ -100,10 +101,110 @@ class GameState:
 
             self.switch_player()
         else:
-            print("Invalid move. Try again.")
+            print("Invalid move. Try again.")      
+
+    def undo_move(self, move):
+        row, col = move
+        self.board[row][col] = '--'
+        self.switch_player()
     
-    def get_state(self):
-        return self
+    ####
+    # ... (other methods in GameState)
+
+    def evaluate_move_quality_in_attack(self, move, player):
+        init_row, init_col = move
+        count = 0
+
+        row = init_row
+        while row + 1 < ROWS and (self.board[row+1][init_col] == player):
+            count += 1
+            row += 1
+
+        row = init_row
+        while row > 0 and (self.board[row-1][init_col] == player):
+            count += 1
+            row -= 1
+
+        col = init_col
+        while col + 1 < COLS and (self.board[init_row][col+1] == player):
+            count += 1
+            col += 1
+
+        col = init_col
+        while col > 0 and (self.board[init_row][col-1] == player):
+            count += 1
+            col -= 1
+        if player == 'X':
+            return count*1.5
+        else:
+            return count*(-1)*1.5
+
+    def evaluate_move_quality_in_defense(self, move, opponent):
+        init_row, init_col = move
+        count = 0
+
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # right, left, down, up
+
+        for direction in directions:
+            row, col = init_row, init_col
+            length = 0
+
+            while (0 <= row < ROWS) and (0 <= col < COLS) and (self.board[row][col] == opponent):
+                length += 1
+                row += direction[0]
+                col += direction[1]
+
+            count += length
+
+        if opponent == 'X':
+            return count*(-1)
+        else:
+            return count
+        
+    def evaluate_game_state_with_new_move(self, player, N):
+        total = 0
+        for row in self.board:
+            count = 0
+            for piece in row:
+                if piece == player:
+                    count += 1
+                else:
+                    total += count
+                    count = 0
+        #check col
+        for col in range(COLS):
+            count = 0
+            for row in range(ROWS):
+                if self.board[row][col] == player:
+                    count += 1                      
+                else:
+                    total += count
+                    count = 0
+        #check diagonal (top-left to bot-right)
+        for row in range(ROWS - N + 1):
+            for col in range(COLS - N + 1):
+                count = 0
+                for i in range(N):
+                    if self.board[row + i][col + i] == player:
+                        count += 1
+                    else:
+                        total += count
+                        count = 0
+
+        #check diagonal (top-right to bot-left)
+        for row in range(N - 1, ROWS):
+            for col in range(COLS - N + 1):
+                count = 0
+                for i in range(N):
+                    if self.board[row - i][col + i] == player:
+                        count += 1
+                    else:
+                        total += count
+                        count = 0
+        if player == 'X':
+            return total 
+        elif player == 'O':
+            return total * (-1)
     
 
 
