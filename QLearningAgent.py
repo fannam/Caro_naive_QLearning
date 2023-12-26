@@ -23,7 +23,10 @@ class QLearningAgent:
             return available_moves[index]
         else:
             Q_value = [self.get_Q_value(state, move) for move in available_moves]
-            index = np.argmax(Q_value)
+            if state.current_player == 'X':
+                index = np.argmax(Q_value)
+            elif state.current_player == 'O':
+                index = np.argmin(Q_value)
             return available_moves[index]
     
     def update_Q_value(self, state, action, reward, next_state):
@@ -75,7 +78,10 @@ class QLearningAgent:
             return None  # No available moves
 
         Q_values = [self.get_Q_value(state, move) for move in available_moves]
-        best_move_index = np.argmax(Q_values)
+        if state.current_player == 'X':
+            best_move_index = np.argmax(Q_values)
+        elif state.current_player == 'O':
+            best_move_index = np.argmin(Q_values)
         print(f"{state} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
         return available_moves[best_move_index]
     
