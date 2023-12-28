@@ -87,15 +87,15 @@ class GameState:
                     moves.append((i, j))
         return moves
     
-    def make_move(self, move):#action
+    def make_move(self, move, player):#action
         row, col = move
         self.last_move = move
         if self.isValidMove(row, col):
-            self.board[row][col] = self.current_player
+            self.board[row][col] = player
 
-            if self.checkInARow(WINNING_COUNT, self.current_player):
+            if self.checkInARow(WINNING_COUNT, player):
                 self.game_over = True
-                self.winner = self.current_player
+                self.winner = player
             elif self.isBoardFull():
                 self.game_over = True
 
@@ -201,12 +201,13 @@ class GameState:
                     else:
                         total += count
                         count = 0
-        if player == 'X':
-            return total 
-        elif player == 'O':
-            return total * (-1)
+        return total
+        # if player == 'X':
+        #     return total 
+        # elif player == 'O':
+        #     return total * (-1)
     
-
+    
 
 
 

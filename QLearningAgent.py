@@ -48,7 +48,7 @@ class QLearningAgent:
                     break
                 action = self.choose_action(state, available_moves)
                 current_state = state
-                state.make_move(action)
+                state.make_move(action, current_state.current_player)
                 next_state = state
                 next_avaiable_moves = next_state.available_moves()
                 if next_state.isGameOver():

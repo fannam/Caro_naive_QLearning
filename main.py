@@ -5,6 +5,7 @@ from const import *
 from engine import GameState
 from QLearningAgent import QLearningAgent
 from tkinter import messagebox
+from QLearning_version2 import *
 
 class MainMenu:
     def __init__(self):
@@ -116,6 +117,8 @@ class Main:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.game_state = GameState()
         self.agent = QLearningAgent(0.1, 0.3, 0.9)
+        self.agent_X = QLearning_version2(player='X', alpha=0.1, epsilon=0.1, discount_factor=0.9)
+        self.agent_O = QLearning_version2(player='O', alpha=0.1, epsilon=0.1, discount_factor=0.9)
         self.isPlayer1Turn = True
         self.isHumanTurn = False
         self.isAITurn = True
@@ -165,6 +168,8 @@ class Main:
             pygame.display.flip()
 
     def mainloop(self):
+        train_agents(self.agent_X, self.agent_O, 1000)
+        self.agent.train(1000)
         in_game = True
         while in_game:
             game_running = True
@@ -202,7 +207,7 @@ class Main:
                                 self.drawGameState(self.screen)
                                 pygame.display.flip()
                                 self.isHumanTurn = False
-                                agent_move = self.agent.best_move(self.game_state)
+                                agent_move = self.agent_X.best_move(self.game_state)
                                 if not self.game_state.isGameOver():
                                     if not self.game_state.isBoardFull():
                                         agent_row, agent_col = agent_move
@@ -247,7 +252,7 @@ class Main:
                                 pygame.display.flip()
                                 self.isAITurn = True                        
                     if self.isAITurn:
-                        agent_move = self.agent.best_move(self.game_state)
+                        agent_move = self.agent_O.best_move(self.game_state)
                         if not self.game_state.isGameOver():
                             if not self.game_state.isBoardFull():
                                 agent_row, agent_col = agent_move
@@ -255,10 +260,10 @@ class Main:
                                 self.drawGameState(self.screen)
                                 pygame.display.flip()
                                 self.isAITurn = False
-                        elif self.game_state.isBoardFull() or self.game_state.isGameOver():
+                        elif self.game_state.isGameOver() or self.game_state.isBoardFull():
                             game_running = False  
                             self.show_game_over_message()
-                    elif self.game_state.isBoardFull() or self.game_state.isGameOver():
+                    elif self.game_state.isGameOver() or self.game_state.isBoardFull():
                         game_running = False  
                         self.show_game_over_message()        
             elif self.game_mode == GameMode.PvP:
@@ -299,8 +304,8 @@ class Main:
                         game_running = False  
                         self.show_game_over_message()         
 
-agent = QLearningAgent(0.1, 0.15, 0.9)
-agent.train(1000)
+
+
 
 if __name__ == "__main__":
     while True:
