@@ -31,7 +31,10 @@ class QLearningAgent:
     
     def update_Q_value(self, state, action, reward, next_state):
         state_str = self.state_to_string(state)
-        best_next_Q = np.max([self.get_Q_value(next_state, move) for move in next_state.available_moves()])
+        if next_state.current_player == 'X':
+            best_next_Q = np.max([self.get_Q_value(next_state, move) for move in next_state.available_moves()])
+        elif next_state.current_player == 'O':
+            best_next_Q = np.min([self.get_Q_value(next_state, move) for move in next_state.available_moves()])
         current_Q_value = self.get_Q_value(state, action)
         new_Q_value = (1 - self.alpha) * current_Q_value + self.alpha * (reward + self.discount_factor * best_next_Q)
         self.Q[(state_str, action)] = new_Q_value
@@ -42,7 +45,7 @@ class QLearningAgent:
             state = GameState() 
             self.reward = 0.0  
             #print(state.board)         
-            while not state.isGameOver() and not state.isBoardFull():
+            while not state.game_over:
                 available_moves = state.available_moves()
                 if len(available_moves)==0:
                     break
@@ -61,12 +64,8 @@ class QLearningAgent:
                 else:
                     if current_state.current_player == 'X':
                         self.reward = next_state.evaluate_game_state_with_new_move('X', WINNING_COUNT)
-                        # print("X")
-                        # print(self.reward)
                     else:
                         self.reward = next_state.evaluate_game_state_with_new_move('O', WINNING_COUNT)
-                        # print("O")
-                        # print(self.reward)
                     
                 if next_avaiable_moves:
                     self.update_Q_value(current_state, action, self.reward, next_state)

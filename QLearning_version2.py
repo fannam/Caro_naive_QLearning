@@ -7,6 +7,7 @@ class QLearning_version2:
         self.alpha = alpha
         self.epsilon = epsilon
         self.discount_factor = discount_factor
+        self.reward = 0.0
         self.Q = {}
 
     def state_to_string(self, state):
@@ -52,6 +53,8 @@ def train_agents(agent1, agent2, num_episodes):
         while not state.game_over:
             current_agent = agent1 if state.current_player == 'X' else agent2
             available_moves = state.available_moves()
+            if len(available_moves)==0:
+                    break
             # Choose action using epsilon-greedy strategy
             action = current_agent.choose_action(state, available_moves)
             current_state = state
@@ -59,18 +62,28 @@ def train_agents(agent1, agent2, num_episodes):
             state.make_move(action, current_agent.player)
             next_state = state
             next_avaiable_moves = next_state.available_moves() 
+            if next_state.isGameOver():
+                if next_state.winner == agent1.player:
+                    agent1.reward = 100.0
+                    # agent2.reward = -100.0
+                elif next_state.winner == agent2.player:
+                    # agent1.reward = -100.0
+                    agent2.reward = 100.0
+            elif next_state.isBoardFull():
+                current_agent.reward = 0.0
+            else:       
             # Calculate the reward (you need to define this based on the game rules)
-            reward = state.evaluate_game_state_with_new_move(current_state.current_player, WINNING_COUNT)
+                current_agent.reward = current_state.evaluate_game_state_with_new_move_ver2(current_state.current_player, WINNING_COUNT)
 
             # Update Q-value for the current agent
             if next_avaiable_moves:
-                current_agent.update_Q_value(current_state, action, reward, next_state)
+                current_agent.update_Q_value(current_state, action, current_agent.reward, next_state)
 
             # Update total reward for the current agent
             if current_agent.player == 'X':
-                total_reward_agent1 += reward
+                total_reward_agent1 += current_agent.reward
             else:
-                total_reward_agent2 += reward
+                total_reward_agent2 += current_agent.reward
 
         # Print or log the total rewards for the episode
         print(f"Episode {episode + 1}, Total Reward Agent X: {total_reward_agent1}, Total Reward Agent O: {total_reward_agent2}")

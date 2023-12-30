@@ -19,6 +19,7 @@ class GameState:
             for piece in row:
                 if piece == '--':
                     return False
+        self.game_over = True
         return True
 
     def checkInARow(self, N, player):
@@ -161,7 +162,7 @@ class GameState:
         else:
             return count
         
-    def evaluate_game_state_with_new_move(self, player, N):
+    def evaluate_game_state_with_new_move_ver2(self, player, N):
         total = 0
         for row in self.board:
             count = 0
@@ -206,7 +207,50 @@ class GameState:
         #     return total 
         # elif player == 'O':
         #     return total * (-1)
-    
+    def evaluate_game_state_with_new_move(self, player, N):
+        total = 0
+        for row in self.board:
+            count = 0
+            for piece in row:
+                if piece == player:
+                    count += 1
+                else:
+                    total += count
+                    count = 0
+        #check col
+        for col in range(COLS):
+            count = 0
+            for row in range(ROWS):
+                if self.board[row][col] == player:
+                    count += 1                      
+                else:
+                    total += count
+                    count = 0
+        #check diagonal (top-left to bot-right)
+        for row in range(ROWS - N + 1):
+            for col in range(COLS - N + 1):
+                count = 0
+                for i in range(N):
+                    if self.board[row + i][col + i] == player:
+                        count += 1
+                    else:
+                        total += count
+                        count = 0
+
+        #check diagonal (top-right to bot-left)
+        for row in range(N - 1, ROWS):
+            for col in range(COLS - N + 1):
+                count = 0
+                for i in range(N):
+                    if self.board[row - i][col + i] == player:
+                        count += 1
+                    else:
+                        total += count
+                        count = 0
+        if player == 'X':
+            return total 
+        elif player == 'O':
+            return total * (-1)
     
 
 
