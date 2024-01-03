@@ -203,6 +203,7 @@ class Main:
                                 self.drawGameState(self.screen)
                                 pygame.display.flip()
                                 self.isHumanTurn = False
+                                self.game_state.switch_player()
                                 agent_move = agent_X.best_move(self.game_state)
                                 #agent_move = agent.best_move(self.game_state)
                                 if not self.game_state.isGameOver():
@@ -212,6 +213,7 @@ class Main:
                                         self.drawGameState(self.screen)
                                         pygame.display.flip()
                                         self.isHumanTurn = True
+                                        self.game_state.switch_player()
                     if self.game_state.isBoardFull() or self.game_state.isGameOver():
                         game_running = False  
                         self.show_game_over_message()              
@@ -246,6 +248,7 @@ class Main:
                             if self.game_state.isValidMove(row, col) and not self.game_state.isGameOver():
                                 self.game_state.board[row][col] = 'O'
                                 self.drawGameState(self.screen)
+                                self.game_state.switch_player()
                                 pygame.display.flip()
                                 self.isAITurn = True                        
                     if self.isAITurn:
@@ -258,6 +261,7 @@ class Main:
                                 self.drawGameState(self.screen)
                                 pygame.display.flip()
                                 self.isAITurn = False
+                                self.game_state.switch_player()
                         elif self.game_state.isGameOver() or self.game_state.isBoardFull():
                             game_running = False  
                             self.show_game_over_message()
@@ -305,10 +309,12 @@ class Main:
 localdb_connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;"
 
 agent = QLearningAgent(0.1, 0.3, 0.9, localdb_connection_string)
-agent_X = QLearning_version2(player='X', alpha=0.1, epsilon=0.1, discount_factor=0.9)
-agent_O = QLearning_version2(player='O', alpha=0.1, epsilon=0.1, discount_factor=0.9)
+agent_X = QLearning_version2('X', 0.15, 0.1, 0.9, localdb_connection_string)
+agent_O = QLearning_version2('O', 0.15, 0.1, 0.9, localdb_connection_string)
 if __name__ == "__main__":
-    agent.load_Q_values_from_database()
+    #agent.load_Q_values_from_database()
+    agent_X.load_Q_values_from_database()
+    agent_O.load_Q_values_from_database()
     while True:
         menu = MainMenu()
         menu.load_background()

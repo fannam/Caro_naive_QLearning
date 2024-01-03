@@ -1,8 +1,9 @@
-from engine import GameState  # Import your GameState class
+from engine import *  
 import numpy as np
 from const import *
 import json
 import pyodbc
+import copy
 class QLearning_version2:
     def __init__(self, player, alpha, epsilon, discount_factor, database_connection_string):
         self.player = player
@@ -67,7 +68,11 @@ class QLearning_version2:
             self.conn.close()
 ###########################
     def state_to_string(self, state):
-        return json.dumps(state.__dict__)
+        state_dict = {
+            'board': state.board,
+            'current_player': state.current_player
+        }
+        return json.dumps(state_dict)
 
     def action_to_string(self, action):
         return f"{action[0]},{action[1]}"
@@ -97,10 +102,19 @@ class QLearning_version2:
         available_moves = state.available_moves()
         if len(available_moves) == 0:
             return None  # No available moves
-        Q_values = [self.get_Q_value(state, move) for move in available_moves]
-        best_move_index = np.argmax(Q_values)
-        print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
-        return available_moves[best_move_index]
+        temp_state = copy.deepcopy(state)
+        best_move = check_winning_move(temp_state)
+        if best_move == None:
+            best_move = check_has_to_block(temp_state)
+            if best_move == None:
+                Q_values = [self.get_Q_value(state, move) for move in available_moves]
+                best_move_index = np.argmax(Q_values)
+                print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
+                return available_moves[best_move_index]
+            else:
+                return best_move
+        else:
+            return best_move
 
     def print_Q_value(self):
         for key, value in self.Q.items():
@@ -117,29 +131,34 @@ def train_agents(agent1, agent2, num_episodes):
             available_moves = state.available_moves()
             if len(available_moves)==0:
                     break
-
             action = current_agent.choose_action(state, available_moves)
             if action != state.get_best_move():
                 current_agent.reward = -10.0
             else:
                 current_agent.reward = 10.0
-            current_state = state
-
+            current_state = copy.deepcopy(state)   
+            #print(f"agent1 state {agent1.state_to_string(current_state)}")     
             state.make_move(action, current_agent.player)
-            next_state = state
+            #print(f"agent1 state after state.makemove {agent1.state_to_string(current_state)}")
+            next_state = copy.deepcopy(state)
             next_avaiable_moves = next_state.available_moves() 
             if next_state.isGameOver():
                 if next_state.winner == agent1.player:
-                    agent1.reward = 100.0
-                    # agent2.reward = -100.0
+                    agent1.reward = 1000.0
                 elif next_state.winner == agent2.player:
-                    # agent1.reward = -100.0
-                    agent2.reward = 100.0
+                    agent2.reward = 1000.0
             elif next_state.isBoardFull():
                 current_agent.reward = 0.0
-
+            #print(current_agent.state_to_string(current_state))
             if next_avaiable_moves:
-                current_agent.update_Q_value(current_state, action, current_agent.reward, next_state)
+                if current_agent == agent1:
+
+                    #print(f"agent1 state {agent1.state_to_string(current_state)}")
+                    agent1.update_Q_value(current_state, action, current_agent.reward, next_state)
+                else:
+                    agent2.update_Q_value(current_state, action, current_agent.reward, next_state)
+                
+                
 
             if current_agent.player == 'X':
                 total_reward_agent1 += current_agent.reward
@@ -154,7 +173,7 @@ agent_O = QLearning_version2('O', 0.1, 0.1, 0.9, "DRIVER={ODBC Driver 17 for SQL
 
 agent_O.load_Q_values_from_database()
 agent_X.load_Q_values_from_database()
-train_agents(agent_X, agent_O, num_episodes=10)
+train_agents(agent_X, agent_O, num_episodes=1000)
 agent_O.save_Q_values_to_database()
 agent_X.save_Q_values_to_database()
 

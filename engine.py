@@ -202,6 +202,8 @@ class GameState:
 
     def minimax(self, depth, alpha, beta, maximizing_player):
         temp_state = copy.deepcopy(self)
+        # print(depth)
+        # print(temp_state.board)
         if depth == 0 or self.game_over:
             return evaluate_state(temp_state)
 
@@ -230,20 +232,26 @@ class GameState:
 
         
     def get_best_move(self):
-        best_move = None
-        best_eval = float('-inf') if self.current_player == 'X' else float('inf')
+        best_move = check_winning_move(self)
+        if best_move == None:
+            best_move = check_has_to_block(self)
+            if best_move == None:
+                best_eval = float('-inf') if self.current_player == 'X' else float('inf')
 
-        for move in self.available_moves():
-            self.make_move(move, self.current_player)
-            eval = self.minimax(3, float('inf'), float('-inf'), False)  # Adjust the depth as needed
-            self.undo_move(move)
+                for move in self.available_moves():
+                    self.make_move(move, self.current_player)
+                    eval = self.minimax(5, float('inf'), float('-inf'), False)  # Adjust the depth as needed
+                    self.undo_move(move)
 
-            if (self.current_player == 'X' and eval > best_eval) or (self.current_player == 'O' and eval < best_eval):
-                best_eval = eval
-                best_move = move
+                    if (self.current_player == 'X' and eval > best_eval) or (self.current_player == 'O' and eval < best_eval):
+                        best_eval = eval
+                        best_move = move
 
-        return best_move
-
+                return best_move
+            else:
+                return best_move
+        else:
+            return best_move
     def count_open_paths(self, player, N):
         open_paths = 0
         rows, cols = len(self.board), len(self.board[0])
@@ -276,10 +284,34 @@ def evaluate_state(state):
     opponent = 'O' if state.current_player == 'X' else 'X'
     player_open_paths = state.count_open_paths(state.current_player, WINNING_COUNT)
     opponent_open_paths = state.count_open_paths(opponent, WINNING_COUNT)
-
+    
         # Gán điểm tùy thuộc vào số đường mở của người chơi và đối thủ
     score = player_open_paths - opponent_open_paths
     return score
 
+def check_winning_move(state):
+    temp_state = copy.deepcopy(state)
+    available_moves = state.available_moves()
+    player = state.current_player
+    for move in available_moves:
+        temp_state.make_move(move, player)
+        #print(temp_state.board)
+        if temp_state.checkInARow(WINNING_COUNT, player):
+            return move
+        temp_state.undo_move(move)
+    return None
+def check_has_to_block(state):
+    temp_state = copy.deepcopy(state)
+    available_moves = state.available_moves()
+    for move in available_moves:
+        next_player = 'X' if state.current_player == 'O' else 'O'
+        temp_state.make_move(move, next_player)
+        if temp_state.checkInARow(WINNING_COUNT, next_player):
+            return move
+        temp_state.undo_move(move)
+    return None
+
+
+        
 
 

@@ -182,10 +182,10 @@ class QLearningAgent:
         for key, value in self.Q.items():
             print(f"Key: {key}, Value: {value}")
 
-agent = QLearningAgent(0.1, 0.3, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
-agent.load_Q_values_from_database()
-agent.train(10)
-agent.save_Q_values_to_database()
+# agent = QLearningAgent(0.1, 0.3, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
+# agent.load_Q_values_from_database()
+# agent.train(10)
+# agent.save_Q_values_to_database()
 
 
 
