@@ -93,13 +93,13 @@ class QLearning_version2:
     def update_Q_value(self, state, action, reward, next_state):
         state_str = self.state_to_string(state)
         action_str = self.action_to_string(action)
-        best_next_Q = np.max([self.get_Q_value(next_state, move) for move in next_state.available_moves()])
+        best_next_Q = np.max([self.get_Q_value(next_state, move) for move in next_state.valid_neighbour_moves()])
         current_Q_value = self.get_Q_value(state, action)
         new_Q_value = (1 - self.alpha) * current_Q_value + self.alpha * (reward + self.discount_factor * best_next_Q)
         self.Q[(state_str, action_str)] = new_Q_value
 
     def best_move(self, state):
-        available_moves = state.available_moves()
+        available_moves = state.valid_neighbour_moves()
         if len(available_moves) == 0:
             return None  # No available moves
         temp_state = copy.deepcopy(state)
@@ -128,7 +128,7 @@ def train_agents(agent1, agent2, num_episodes):
 
         while not state.game_over:
             current_agent = agent1 if state.current_player == 'X' else agent2
-            available_moves = state.available_moves()
+            available_moves = state.valid_neighbour_moves()
             if len(available_moves)==0:
                     break
             action = current_agent.choose_action(state, available_moves)
@@ -141,7 +141,7 @@ def train_agents(agent1, agent2, num_episodes):
             state.make_move(action, current_agent.player)
             #print(f"agent1 state after state.makemove {agent1.state_to_string(current_state)}")
             next_state = copy.deepcopy(state)
-            next_avaiable_moves = next_state.available_moves() 
+            next_avaiable_moves = next_state.valid_neighbour_moves() 
             if next_state.isGameOver():
                 if next_state.winner == agent1.player:
                     agent1.reward = 1000.0

@@ -88,6 +88,31 @@ class GameState:
                     moves.append((i, j))
         return moves
     
+    def valid_neighbour_moves(self):
+        all_moves = []
+        can_use_moves = []
+
+        for i in range(ROWS):
+            for j in range(COLS):
+                if self.board[i][j] != '--':
+                    # Get neighbors for the current piece
+                    neighbors = get_neighbours((i, j))
+
+                    # Accumulate all neighbors
+                    all_moves.extend(neighbors)
+                else:
+                    # Count the number of valid moves
+                    can_use_moves.append((i, j))
+
+    # If all cells are empty, return the center cell
+        if not all_moves:
+            return [((ROWS - 1) // 2, (COLS - 1) // 2)]
+
+    # Filter out duplicates and invalid moves
+        can_use_moves = list(set(can_use_moves) & set(all_moves))
+        
+        return can_use_moves
+    
     def make_move(self, move, player):#action
         row, col = move
         #self.last_move = move
@@ -209,7 +234,7 @@ class GameState:
 
         if maximizing_player:
             max_eval = float('-inf')
-            for move in temp_state.available_moves():
+            for move in temp_state.valid_neighbour_moves():
                 temp_state.make_move(move, temp_state.current_player)
                 eval = temp_state.minimax(depth - 1, alpha, beta, False)
                 temp_state.undo_move(move)
@@ -220,7 +245,7 @@ class GameState:
             return max_eval
         else:
             min_eval = float('inf')
-            for move in temp_state.available_moves():
+            for move in temp_state.valid_neighbour_moves():
                 temp_state.make_move(move, temp_state.current_player)
                 eval = temp_state.minimax(depth - 1, alpha, beta, True)
                 temp_state.undo_move(move)
@@ -311,7 +336,16 @@ def check_has_to_block(state):
         temp_state.undo_move(move)
     return None
 
-
-        
-
-
+def get_neighbours(t):
+    (i, j) = t
+    neighbour_moves = [
+        (i, j - 1),  # Left
+        (i, j + 1),  # Right
+        (i - 1, j),  # Top
+        (i + 1, j),  # Bottom
+        (i - 1, j - 1),  # Top-left
+        (i - 1, j + 1),  # Top-right
+        (i + 1, j - 1),  # Bottom-left
+        (i + 1, j + 1),  # Bottom-right
+    ]
+    return neighbour_moves
