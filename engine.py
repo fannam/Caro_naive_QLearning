@@ -227,8 +227,7 @@ class GameState:
 
     def minimax(self, depth, alpha, beta, maximizing_player):
         temp_state = copy.deepcopy(self)
-        # print(depth)
-        # print(temp_state.board)
+
         if depth == 0 or self.game_over:
             return evaluate_state(temp_state)
 
@@ -257,13 +256,14 @@ class GameState:
 
         
     def get_best_move(self):
+        best_move = None
         best_move = check_winning_move(self)
         if best_move == None:
             best_move = check_has_to_block(self)
             if best_move == None:
                 best_eval = float('-inf') if self.current_player == 'X' else float('inf')
 
-                for move in self.available_moves():
+                for move in self.valid_neighbour_moves():
                     self.make_move(move, self.current_player)
                     eval = self.minimax(5, float('inf'), float('-inf'), False)  # Adjust the depth as needed
                     self.undo_move(move)
@@ -277,6 +277,46 @@ class GameState:
                 return best_move
         else:
             return best_move
+    def count_open_paths_v2(self, player, N):
+        open_paths = 0
+        rows, cols = len(self.board), len(self.board[0])
+
+        def check_direction(start, direction):
+            nonlocal open_paths
+            count = 0
+            has_player_piece = False
+            i, j = start
+
+            for _ in range(N):
+                if 0 <= i < rows and 0 <= j < cols:
+                    cell = self.board[i][j]
+                    if cell == player:
+                        has_player_piece = True
+                        count += 1
+                        if count == N:
+                            open_paths += 1
+                            break
+                    elif cell == '--':
+                        count += 1
+                    else:
+                        break
+                    i, j = i + direction[0], j + direction[1]
+                else:
+                    break
+
+            if not has_player_piece:
+                open_paths -= count // N
+
+        # Check all directions
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]  # Right, Down, Diagonal right-down, Diagonal left-down
+
+        for i in range(rows):
+            for j in range(cols):
+                for direction in directions:
+                    check_direction((i, j), direction)
+
+        return open_paths
+    
     def count_open_paths(self, player, N):
         open_paths = 0
         rows, cols = len(self.board), len(self.board[0])
@@ -284,13 +324,24 @@ class GameState:
         def check_line(line):
             nonlocal open_paths
             count = 0
+            has_player_piece = False
+            
             for cell in line:
-                if cell == player or cell == '--':
+                if cell == player:
+                    has_player_piece = True
+                    count += 1
+                    if count == N:
+                        open_paths += 1
+                elif cell == '--':
                     count += 1
                     if count == N:
                         open_paths += 1
                 else:
                     count = 0
+                    has_player_piece = False
+
+            if not has_player_piece:
+                open_paths -= count // N
 
         # Check rows and columns
         for i in range(rows):
@@ -307,10 +358,8 @@ class GameState:
 
 def evaluate_state(state):
     opponent = 'O' if state.current_player == 'X' else 'X'
-    player_open_paths = state.count_open_paths(state.current_player, WINNING_COUNT)
-    opponent_open_paths = state.count_open_paths(opponent, WINNING_COUNT)
-    
-        # Gán điểm tùy thuộc vào số đường mở của người chơi và đối thủ
+    player_open_paths = state.count_open_paths_v2(state.current_player, WINNING_COUNT)
+    opponent_open_paths = state.count_open_paths_v2(opponent, WINNING_COUNT)
     score = player_open_paths - opponent_open_paths
     return score
 
@@ -324,14 +373,31 @@ def check_winning_move(state):
         if temp_state.checkInARow(WINNING_COUNT, player):
             return move
         temp_state.undo_move(move)
+
     return None
+
 def check_has_to_block(state):
     temp_state = copy.deepcopy(state)
     available_moves = state.available_moves()
+    next_player = 'X' if temp_state.current_player == 'O' else 'O'
     for move in available_moves:
-        next_player = 'X' if state.current_player == 'O' else 'O'
+        
         temp_state.make_move(move, next_player)
+
         if temp_state.checkInARow(WINNING_COUNT, next_player):
+            return move
+
+        temp_state.undo_move(move)
+
+    return None
+
+def check_block_three_in_a_row(state):
+    temp_state = copy.deepcopy(state)
+    available_moves = state.available_moves()
+    next_player = 'X' if temp_state.current_player == 'O' else 'O'
+    for move in available_moves:
+        temp_state.make_move(move, next_player)
+        if temp_state.checkInARow(4, next_player):
             return move
         temp_state.undo_move(move)
     return None

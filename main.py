@@ -170,7 +170,8 @@ class Main:
             game_running = True
             self.game_state = GameState()
             if self.game_mode == GameMode.PvComX:
-                
+                # for key, value in agent_X.Q.items():
+                #     print(f"Key: {key}, Value: {value}")
                 self.isHumanTurn = True
                 self.drawGameState(self.screen)
                 pygame.display.flip()
@@ -204,20 +205,21 @@ class Main:
                                 pygame.display.flip()
                                 self.isHumanTurn = False
                                 self.game_state.switch_player()
-                                agent_move = agent_X.best_move(self.game_state)
+                                agent_move = agent_O.best_move(self.game_state)
+                            
                                 #agent_move = agent.best_move(self.game_state)
                                 if not self.game_state.isGameOver():
                                     if not self.game_state.isBoardFull():
                                         agent_row, agent_col = agent_move
-                                        self.game_state.board[agent_row][agent_col] = 'O'
+                                        self.game_state.make_move(agent_move, agent_O.player)
                                         self.drawGameState(self.screen)
                                         pygame.display.flip()
                                         self.isHumanTurn = True
-                                        self.game_state.switch_player()
+                                        #self.game_state.switch_player()
                     if self.game_state.isBoardFull() or self.game_state.isGameOver():
                         game_running = False  
                         self.show_game_over_message()              
-            elif self.game_mode == GameMode.PvComO:              
+            elif self.game_mode == GameMode.PvComO:             
                 self.isAITurn = True
                 self.drawGameState(self.screen)
                 pygame.display.flip()
@@ -252,12 +254,12 @@ class Main:
                                 pygame.display.flip()
                                 self.isAITurn = True                        
                     if self.isAITurn:
-                        agent_move = agent_O.best_move(self.game_state)
-                        #agent_move = agent.best_move(self.game_state)
+                        agent_move = agent_X.best_move(self.game_state)
                         if not self.game_state.isGameOver():
                             if not self.game_state.isBoardFull():
                                 agent_row, agent_col = agent_move
                                 self.game_state.board[agent_row][agent_col] = 'X'
+                                
                                 self.drawGameState(self.screen)
                                 pygame.display.flip()
                                 self.isAITurn = False
@@ -306,15 +308,21 @@ class Main:
                         game_running = False  
                         self.show_game_over_message()         
 
+    
 localdb_connection_string = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;"
 
-agent = QLearningAgent(0.1, 0.3, 0.9, localdb_connection_string)
+#agent = QLearningAgent(0.1, 0.3, 0.9, localdb_connection_string)
 agent_X = QLearning_version2('X', 0.15, 0.1, 0.9, localdb_connection_string)
 agent_O = QLearning_version2('O', 0.15, 0.1, 0.9, localdb_connection_string)
 if __name__ == "__main__":
     #agent.load_Q_values_from_database()
-    agent_X.load_Q_values_from_database()
+    count = 0
     agent_O.load_Q_values_from_database()
+    agent_X.load_Q_values_from_database()
+    for key, value in agent_X.Q.items():
+        print(f"Key: {key}, Value: {value}")
+    #print(agent_X.Q['46ca915064ecf8b878d18c1425745e61115763f5abc490becf57b97038c52fc3', '03ebfc2d40db30128bccfcea3aa3e32abd00335d2054f06631f31fe711a3be58'])
+    #print(agent_X.Q['cc884ded72d0b815e401de47395c25d9b88337fb6b740f788ccbff2b269687a3', '7334821429a99561be94ccfc7b8d6f9b85af618fdb5e323f5fa3637c6947a349'])
     while True:
         menu = MainMenu()
         menu.load_background()
@@ -326,6 +334,7 @@ if __name__ == "__main__":
                 game.mainloop()
             elif game_mode == GameMode.PvComX:
                 game = Main(game_mode)
+                
                 game.mainloop()
             elif game_mode == GameMode.PvP:
                 game = Main(game_mode)

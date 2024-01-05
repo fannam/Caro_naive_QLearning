@@ -4,6 +4,7 @@ from const import *
 import json
 import pyodbc
 import copy
+import hashlib
 class QLearning_version2:
     def __init__(self, player, alpha, epsilon, discount_factor, database_connection_string):
         self.player = player
@@ -52,6 +53,16 @@ class QLearning_version2:
 
         self.conn.commit()
         self.close_database_connection()
+    # def load_Q_values_from_database(self):
+    #     self.connect_to_database()
+
+    #     self.cursor.execute(f"SELECT state_str, action_str, QValue FROM QValues_{self.player}")
+    #     rows = self.cursor.fetchall()
+        
+    #     for row in rows:
+    #         state_str, action_str, q_value = row
+    #         self.Q[(state_str, action_str)] = q_value
+    #     self.close_database_connection()
     def load_Q_values_from_database(self):
         self.connect_to_database()
 
@@ -60,7 +71,10 @@ class QLearning_version2:
         
         for row in rows:
             state_str, action_str, q_value = row
-            self.Q[(state_str, action_str)] = q_value
+            key = (state_str, action_str)
+            print(key)
+            self.Q[key] = q_value
+
         self.close_database_connection()
 
     def close_database_connection(self):
@@ -72,23 +86,49 @@ class QLearning_version2:
             'board': state.board,
             'current_player': state.current_player
         }
-        return json.dumps(state_dict)
+        state_str = json.dumps(state_dict)
+        return hashlib.sha256(state_str.encode()).hexdigest()
 
     def action_to_string(self, action):
-        return f"{action[0]},{action[1]}"
+        action_str = f"{action[0]},{action[1]}"
+        return hashlib.sha256(action_str.encode()).hexdigest()
 
+    # def get_Q_value(self, state, action):
+    #     state_str = self.state_to_string(state)
+    #     action_str = self.action_to_string(action)
+    #     return self.Q.get((state_str, action_str), np.random.uniform(-0.1, 0.1))
     def get_Q_value(self, state, action):
         state_str = self.state_to_string(state)
         action_str = self.action_to_string(action)
-        return self.Q.get((state_str, action_str), np.random.uniform(-0.1, 0.1))
+        key = (state_str, action_str)
+        #print(f"Checking key: {key}")
+        if key in self.Q:
+            return self.Q[key]
+        else:
+            # If the key is not present, initialize it with a random value
+            #print(f"Key not found, initializing with a random value for key: {key}")
+            self.Q[key] = np.random.uniform(-0.1, 0.1)
+            return self.Q[key]
 
     def choose_action(self, state, available_moves):
         if np.random.rand() < self.epsilon:
             index = np.random.choice(len(available_moves))
             return available_moves[index]
         else:
-            Q_values = [self.get_Q_value(state, move) for move in available_moves]
-            return available_moves[np.argmax(Q_values)]
+            temp_state = copy.deepcopy(state)
+            best_move = check_winning_move(temp_state)
+            if best_move == None:
+                best_move = check_has_to_block(temp_state)
+                if best_move == None:
+                    Q_values = [self.get_Q_value(state, move) for move in available_moves]
+                    #print(Q_values)
+                    best_move_index = np.argmax(Q_values)
+                    #print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
+                    return available_moves[best_move_index]
+                else:
+                    return best_move
+            else:
+                return best_move
 
     def update_Q_value(self, state, action, reward, next_state):
         state_str = self.state_to_string(state)
@@ -108,6 +148,7 @@ class QLearning_version2:
             best_move = check_has_to_block(temp_state)
             if best_move == None:
                 Q_values = [self.get_Q_value(state, move) for move in available_moves]
+                #print(Q_values)
                 best_move_index = np.argmax(Q_values)
                 print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
                 return available_moves[best_move_index]
@@ -167,13 +208,14 @@ def train_agents(agent1, agent2, num_episodes):
 
         # Print or log the total rewards for the episode
         print(f"Episode {episode + 1}, Winner: {state.winner} Total Reward Agent X: {total_reward_agent1}, Total Reward Agent O: {total_reward_agent2}")
-        
-agent_X = QLearning_version2('X', 0.1, 0.1, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
-agent_O = QLearning_version2('O', 0.1, 0.1, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
+        ################
+
+agent_X = QLearning_version2('X', 0.1, 0.2, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
+agent_O = QLearning_version2('O', 0.1, 0.2, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
 
 agent_O.load_Q_values_from_database()
 agent_X.load_Q_values_from_database()
-train_agents(agent_X, agent_O, num_episodes=1000)
+train_agents(agent_X, agent_O, num_episodes=10)
 agent_O.save_Q_values_to_database()
 agent_X.save_Q_values_to_database()
 
