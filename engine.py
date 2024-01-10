@@ -280,7 +280,7 @@ class GameState:
                 else:
                     return best_move
 
-                return best_move
+                #return best_move
             else:
                 return best_move
         else:
@@ -407,8 +407,11 @@ def check_make_four_in_a_row(state):
         temp_state.make_move(move, player)
         if temp_state.checkInARow(4, player):
             # Check if making four in a row can lead to five in a row
-            if check_potential_five_in_a_row(temp_state, player):
-                return move
+            next_avaiable_moves = temp_state.valid_neighbour_moves()
+            for next_move in next_avaiable_moves:
+                temp_state.make_move(move, player)
+                if temp_state.checkInARow(5, player):
+                    return move
         temp_state.undo_move(move)
     return None
 
@@ -432,7 +435,9 @@ def check_block_three_in_a_row(state):
     for move in available_moves:
         temp_state.make_move(move, next_player)
         if temp_state.checkInARow(4, next_player):
-            for next_move in temp_state.valid_neighbour_moves():
+            print(temp_state.board)
+            next_avaiable_moves = temp_state.valid_neighbour_moves()
+            for next_move in next_avaiable_moves:
                 temp_state.make_move(next_move, next_player)
                 if temp_state.checkInARow(5, next_player):
                     return move
