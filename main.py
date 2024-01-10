@@ -319,8 +319,8 @@ if __name__ == "__main__":
     count = 0
     agent_O.load_Q_values_from_database()
     agent_X.load_Q_values_from_database()
-    for key, value in agent_X.Q.items():
-        print(f"Key: {key}, Value: {value}")
+    # for key, value in agent_X.Q.items():
+    #     print(f"Key: {key}, Value: {value}")
     #print(agent_X.Q['46ca915064ecf8b878d18c1425745e61115763f5abc490becf57b97038c52fc3', '03ebfc2d40db30128bccfcea3aa3e32abd00335d2054f06631f31fe711a3be58'])
     #print(agent_X.Q['cc884ded72d0b815e401de47395c25d9b88337fb6b740f788ccbff2b269687a3', '7334821429a99561be94ccfc7b8d6f9b85af618fdb5e323f5fa3637c6947a349'])
     while True:

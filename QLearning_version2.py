@@ -37,8 +37,17 @@ class QLearning_version2:
 
     def save_Q_values_to_database(self):
         self.connect_to_database()
-        for (state_str, action_str), q_value in self.Q.items():
-            self.cursor.execute(
+
+        try:
+            # Create a list to store the rows for bulk insert
+            bulk_rows = []
+
+            for (state_str, action_str), q_value in self.Q.items():
+                bulk_rows.append((state_str, action_str, q_value))
+
+            # Use bulk insert to insert all rows at once
+            self.cursor.fast_executemany = True
+            self.cursor.executemany(
                 f"""
                 MERGE INTO QValues_{self.player} AS target
                 USING (VALUES (?, ?, ?)) AS source (state_str, action_str, QValue)
@@ -48,11 +57,15 @@ class QLearning_version2:
                 WHEN NOT MATCHED THEN
                     INSERT (state_str, action_str, QValue) VALUES (source.state_str, source.action_str, source.QValue);
                 """,
-                state_str, action_str, q_value
+                bulk_rows
             )
 
-        self.conn.commit()
-        self.close_database_connection()
+            self.conn.commit()
+            print(f"Bulk insert successful for Agent {self.player}.")
+        except Exception as e:
+            print(f"Error during bulk insert: {e}")
+        finally:
+            self.close_database_connection()
     # def load_Q_values_from_database(self):
     #     self.connect_to_database()
 
@@ -72,7 +85,6 @@ class QLearning_version2:
         for row in rows:
             state_str, action_str, q_value = row
             key = (state_str, action_str)
-            print(key)
             self.Q[key] = q_value
 
         self.close_database_connection()
@@ -147,11 +159,19 @@ class QLearning_version2:
         if best_move == None:
             best_move = check_has_to_block(temp_state)
             if best_move == None:
-                Q_values = [self.get_Q_value(state, move) for move in available_moves]
-                #print(Q_values)
-                best_move_index = np.argmax(Q_values)
-                print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
-                return available_moves[best_move_index]
+                best_move = check_make_four_in_a_row(temp_state)
+                if best_move == None:
+                    best_move = check_block_three_in_a_row(temp_state)
+                    if best_move == None:
+                        Q_values = [self.get_Q_value(state, move) for move in available_moves]
+                        #print(Q_values)
+                        best_move_index = np.argmax(Q_values)
+                        print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
+                        return available_moves[best_move_index]
+                    else:
+                        return best_move
+                else:
+                    return best_move
             else:
                 return best_move
         else:
@@ -210,12 +230,12 @@ def train_agents(agent1, agent2, num_episodes):
         print(f"Episode {episode + 1}, Winner: {state.winner} Total Reward Agent X: {total_reward_agent1}, Total Reward Agent O: {total_reward_agent2}")
         ################
 
-agent_X = QLearning_version2('X', 0.1, 0.2, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
-agent_O = QLearning_version2('O', 0.1, 0.2, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
+agent_X = QLearning_version2('X', 0.1, 0.1, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
+agent_O = QLearning_version2('O', 0.1, 0.1, 0.9, "DRIVER={ODBC Driver 17 for SQL Server};SERVER=(localdb)\mssqllocaldb;DATABASE=CaroQValues;Trusted_Connection=yes;")
 
-agent_O.load_Q_values_from_database()
-agent_X.load_Q_values_from_database()
-train_agents(agent_X, agent_O, num_episodes=10)
-agent_O.save_Q_values_to_database()
-agent_X.save_Q_values_to_database()
+# agent_O.load_Q_values_from_database()
+# agent_X.load_Q_values_from_database()
+# train_agents(agent_X, agent_O, num_episodes=100)
+# agent_O.save_Q_values_to_database()
+# agent_X.save_Q_values_to_database()
 

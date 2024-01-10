@@ -9,7 +9,7 @@ class GameState:
         self.winner = None
 
     def isValidMove(self, row, col):
-        return self.board[row][col]=='--'
+        return 0<=row and row<ROWS and 0<=col and col<COLS and self.board[row][col]=='--'
     
     def isGameOver(self):
         return self.checkInARow(WINNING_COUNT, self.players[0]) or self.checkInARow(WINNING_COUNT, self.players[1])
@@ -261,16 +261,24 @@ class GameState:
         if best_move == None:
             best_move = check_has_to_block(self)
             if best_move == None:
-                best_eval = float('-inf') if self.current_player == 'X' else float('inf')
+                best_move = check_make_four_in_a_row(self)
+                if best_move == None:
+                    best_move = check_block_three_in_a_row(self)
+                    if best_move == None:
+                        best_eval = float('-inf') if self.current_player == 'X' else float('inf')
 
-                for move in self.valid_neighbour_moves():
-                    self.make_move(move, self.current_player)
-                    eval = self.minimax(5, float('inf'), float('-inf'), False)  # Adjust the depth as needed
-                    self.undo_move(move)
+                        for move in self.valid_neighbour_moves():
+                            self.make_move(move, self.current_player)
+                            eval = self.minimax(5, float('inf'), float('-inf'), False)  # Adjust the depth as needed
+                            self.undo_move(move)
 
-                    if (self.current_player == 'X' and eval > best_eval) or (self.current_player == 'O' and eval < best_eval):
-                        best_eval = eval
-                        best_move = move
+                            if (self.current_player == 'X' and eval > best_eval) or (self.current_player == 'O' and eval < best_eval):
+                                best_eval = eval
+                                best_move = move
+                    else:
+                        return best_move
+                else:
+                    return best_move
 
                 return best_move
             else:
@@ -391,16 +399,68 @@ def check_has_to_block(state):
 
     return None
 
+def check_make_four_in_a_row(state):
+    temp_state = copy.deepcopy(state)
+    available_moves = state.valid_neighbour_moves()
+    player = state.current_player
+    for move in available_moves:
+        temp_state.make_move(move, player)
+        if temp_state.checkInARow(4, player):
+            # Check if making four in a row can lead to five in a row
+            if check_potential_five_in_a_row(temp_state, player):
+                return move
+        temp_state.undo_move(move)
+    return None
+
+# def check_block_three_in_a_row(state):
+#     temp_state = copy.deepcopy(state)
+#     available_moves = state.valid_neighbour_moves()
+#     next_player = 'X' if temp_state.current_player == 'O' else 'O'
+#     for move in available_moves:
+#         temp_state.make_move(move, next_player)
+#         if temp_state.checkInARow(3, next_player):
+#             # Check if blocking three in a row can lead to five in a row
+#             if check_potential_five_in_a_row(temp_state, next_player):
+#                 return move
+#         temp_state.undo_move(move)
+#     return None
 def check_block_three_in_a_row(state):
     temp_state = copy.deepcopy(state)
-    available_moves = state.available_moves()
-    next_player = 'X' if temp_state.current_player == 'O' else 'O'
+    available_moves = temp_state.valid_neighbour_moves()
+    next_player = 'X' if state.current_player == 'O' else 'O'
+
     for move in available_moves:
         temp_state.make_move(move, next_player)
         if temp_state.checkInARow(4, next_player):
-            return move
+            for next_move in temp_state.valid_neighbour_moves():
+                temp_state.make_move(next_move, next_player)
+                if temp_state.checkInARow(5, next_player):
+                    return move
+                temp_state.undo_move(next_move)
         temp_state.undo_move(move)
     return None
+
+# Add this method in the GameState class
+def check_potential_five_in_a_row(state, player):
+    for move in state.valid_neighbour_moves():
+        state.make_move(move, player)
+        if state.checkInARow(5, player):
+            state.undo_move(move)
+            return True
+        state.undo_move(move)
+    return False
+
+def check_open_ends(state, row, col):
+    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+
+    for direction in directions:
+        if state.isValidMove(row + direction[0], col + direction[1] - 1) and \
+           state.isValidMove(row + direction[0], col + direction[1] + 3) and \
+           state.board[row + direction[0]][col + direction[1] - 1] == '--' and \
+           state.board[row + direction[0]][col + direction[1] + 3] == '--':
+            return True
+
+    return False
 
 def get_neighbours(t):
     (i, j) = t
