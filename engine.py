@@ -1,5 +1,7 @@
 from const import *
 import copy
+import json
+import hashlib
 class GameState:
     def __init__(self):
         self.board = [['--' for _ in range(COLS)] for _ in range(ROWS)]
@@ -379,6 +381,7 @@ def check_winning_move(state):
         temp_state.make_move(move, player)
         #print(temp_state.board)
         if temp_state.checkInARow(WINNING_COUNT, player):
+            temp_state.undo_move(move)
             return move
         temp_state.undo_move(move)
 
@@ -393,40 +396,31 @@ def check_has_to_block(state):
         temp_state.make_move(move, next_player)
 
         if temp_state.checkInARow(WINNING_COUNT, next_player):
+            temp_state.undo_move(move)
             return move
-
         temp_state.undo_move(move)
 
     return None
 
 def check_make_four_in_a_row(state):
     temp_state = copy.deepcopy(state)
+    #print(state_to_string(temp_state))
     available_moves = state.valid_neighbour_moves()
     player = state.current_player
     for move in available_moves:
         temp_state.make_move(move, player)
+        #print(state_to_string(temp_state))
         if temp_state.checkInARow(4, player):
             # Check if making four in a row can lead to five in a row
             next_avaiable_moves = temp_state.valid_neighbour_moves()
             for next_move in next_avaiable_moves:
-                temp_state.make_move(move, player)
+                temp_state.make_move(next_move, player)
                 if temp_state.checkInARow(5, player):
                     return move
+                temp_state.undo_move(next_move)
         temp_state.undo_move(move)
     return None
 
-# def check_block_three_in_a_row(state):
-#     temp_state = copy.deepcopy(state)
-#     available_moves = state.valid_neighbour_moves()
-#     next_player = 'X' if temp_state.current_player == 'O' else 'O'
-#     for move in available_moves:
-#         temp_state.make_move(move, next_player)
-#         if temp_state.checkInARow(3, next_player):
-#             # Check if blocking three in a row can lead to five in a row
-#             if check_potential_five_in_a_row(temp_state, next_player):
-#                 return move
-#         temp_state.undo_move(move)
-#     return None
 def check_block_three_in_a_row(state):
     temp_state = copy.deepcopy(state)
     available_moves = temp_state.valid_neighbour_moves()
@@ -435,37 +429,20 @@ def check_block_three_in_a_row(state):
     for move in available_moves:
         temp_state.make_move(move, next_player)
         if temp_state.checkInARow(4, next_player):
-            print(temp_state.board)
             next_avaiable_moves = temp_state.valid_neighbour_moves()
             for next_move in next_avaiable_moves:
                 temp_state.make_move(next_move, next_player)
                 if temp_state.checkInARow(5, next_player):
-                    return move
+                    nn_available_moves = temp_state.valid_neighbour_moves()
+                    for nn_move in nn_available_moves:
+                        temp_state.make_move(nn_move, next_player)
+                        if temp_state.checkInARow(6, next_player):
+                            return move
                 temp_state.undo_move(next_move)
         temp_state.undo_move(move)
     return None
 
 # Add this method in the GameState class
-def check_potential_five_in_a_row(state, player):
-    for move in state.valid_neighbour_moves():
-        state.make_move(move, player)
-        if state.checkInARow(5, player):
-            state.undo_move(move)
-            return True
-        state.undo_move(move)
-    return False
-
-def check_open_ends(state, row, col):
-    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
-
-    for direction in directions:
-        if state.isValidMove(row + direction[0], col + direction[1] - 1) and \
-           state.isValidMove(row + direction[0], col + direction[1] + 3) and \
-           state.board[row + direction[0]][col + direction[1] - 1] == '--' and \
-           state.board[row + direction[0]][col + direction[1] + 3] == '--':
-            return True
-
-    return False
 
 def get_neighbours(t):
     (i, j) = t

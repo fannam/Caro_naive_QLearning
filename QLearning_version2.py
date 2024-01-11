@@ -166,7 +166,7 @@ class QLearning_version2:
                         Q_values = [self.get_Q_value(state, move) for move in available_moves]
                         #print(Q_values)
                         best_move_index = np.argmax(Q_values)
-                        print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
+                        #print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
                         return available_moves[best_move_index]
                     else:
                         return best_move
