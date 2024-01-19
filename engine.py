@@ -443,7 +443,65 @@ def check_block_three_in_a_row(state):
     return None
 
 # Add this method in the GameState class
+def check_block_three_has_two_open(state):
+    next_player = 'X' if state.current_player == 'O' else 'O'
 
+    for i in range(ROWS):
+        for j in range(COLS):
+            if state.board[i][j] == next_player:
+                # Check for sequences in rows
+                if j>=1 and j<COLS-3 and state.board[i][j+1] == next_player and state.board[i][j+2]==next_player:
+                    if state.board[i][j-1]=='--' and state.board[i][j+3]=='--':
+                        if j> COLS//2:
+                            return (i, j-1)
+                        else:
+                            return (i, j+3)
+                if i>=1 and i<ROWS-3 and state.board[i+1][j]==next_player and state.board[i+2][j]==next_player:
+                    if state.board[i-1][j]=='--' and state.board[i+3][j]=='--':
+                        if i> ROWS//2:
+                            return (i-1, j)
+                        else:
+                            return (i+3, j)
+                # Check for sequences in diagonals
+                if i >= 1 and j >= 1 and i<ROWS-3 and j<COLS-3 and state.board[i+1][j+1] == next_player and state.board[i+2][j+2] == next_player:
+                    if state.board[i-1][j-1]=='--' and state.board[i+3][j+3]=='--':
+                        if i> ROWS//2:
+                            return (i-1, j-1)
+                        else:
+                            return (i+3, j+3)
+                if i >= 1 and j >=3 and i<ROWS-3 and j<COLS and state.board[i+1][j-1] == next_player and state.board[i+2][j-2] == next_player:
+                    if state.board[i-1][j+1]=='--' and state.board[i+3][j-3]=='--':
+                        if i> ROWS//2:
+                            return (i-1, j+1)
+                        else:
+                            return (i+3, j-3)
+                #####
+                if j>=1 and j<COLS-4 and state.board[i][j+1] == next_player and state.board[i][j+3]==next_player:
+                    if state.board[i][j-1]=='--' and state.board[i][j+2]=='--':
+                        return (i, j+2)
+                if j>=1 and j<COLS-4 and state.board[i][j+2] == next_player and state.board[i][j+3]==next_player:
+                    if state.board[i][j+1]=='--' and state.board[i][j-1]=='--':
+                        return (i, j+1)
+                if i>=1 and i<ROWS-4 and state.board[i+1][j]==next_player and state.board[i+3][j]==next_player:
+                    if state.board[i-1][j]=='--' and state.board[i+2][j]=='--':
+                        return (i+2, j)
+                if i>=1 and i<ROWS-4 and state.board[i+2][j]==next_player and state.board[i+3][j]==next_player:
+                    if state.board[i-1][j]=='--' and state.board[i+1][j]=='--':
+                        return (i+1, j)        
+                if i >= 1 and j >= 1 and i<ROWS-3 and j<COLS-3 and state.board[i+1][j+1] == next_player and state.board[i+3][j+3] == next_player:
+                    if state.board[i-1][j-1]=='--' and state.board[i+2][j+2]=='--':
+                        return (i+2, j+2)
+                if i >= 1 and j >= 1 and i<ROWS-3 and j<COLS-3 and state.board[i+2][j+2] == next_player and state.board[i+3][j+3] == next_player:
+                    if state.board[i-1][j-1]=='--' and state.board[i+1][j+1]=='--':
+                        return (i+1, j+1)
+                if i >= 1 and j >=3 and i<ROWS-3 and j<COLS-1 and state.board[i+1][j-1] == next_player and state.board[i+3][j-3] == next_player:
+                    if state.board[i-1][j+1]=='--' and state.board[i+2][j-2]=='--':
+                        return (i+2, j-2)
+                if i >= 1 and j >=3 and i<ROWS-3 and j<COLS-1 and state.board[i+2][j-2] == next_player and state.board[i+3][j-3] == next_player:
+                    if state.board[i-1][j+1]=='--' and state.board[i+1][j-1]=='--':
+                        return (i+1, j-1)    
+
+    return None
 def get_neighbours(t):
     (i, j) = t
     neighbour_moves = [

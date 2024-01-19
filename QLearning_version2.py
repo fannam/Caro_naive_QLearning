@@ -153,18 +153,23 @@ class QLearning_version2:
     def best_move(self, state):
         available_moves = state.valid_neighbour_moves()
         if len(available_moves) == 0:
+            print("no available move")
             return None  # No available moves
-        temp_state = copy.deepcopy(state)
-        best_move = check_winning_move(temp_state)
+        #temp_state = copy.deepcopy(state)
+        best_move = check_winning_move(state)
         if best_move == None:
-            best_move = check_has_to_block(temp_state)
+            print("No winning move")
+            best_move = check_has_to_block(state)
             if best_move == None:
-                best_move = check_make_four_in_a_row(temp_state)
+                print("No has to block move")
+                best_move = check_make_four_in_a_row(state)
                 if best_move == None:
-                    best_move = check_block_three_in_a_row(temp_state)
+                    print("No make 4 move")
+                    #best_move = check_block_three_in_a_row(temp_state)
+                    best_move = check_block_three_has_two_open(state)
                     if best_move == None:
+                        print("No possible 4 in a row 2 open")
                         Q_values = [self.get_Q_value(state, move) for move in available_moves]
-                        #print(Q_values)
                         best_move_index = np.argmax(Q_values)
                         #print(f"{self.state_to_string(state)} {available_moves[best_move_index]} {self.get_Q_value(state, available_moves[best_move_index])}")
                         return available_moves[best_move_index]
