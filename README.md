@@ -1,7 +1,7 @@
 # Caro
-##A project for Project-1-hust-20231
+## A project for Project-1-hust-20231
 
-##Trying to use Reinforcement Learning and success
+## Trying to use Reinforcement Learning and success
 
 This project implemented the basic (I prefer to call 'naive' since it's the simplest) Q-Learning agents to play Caro a.k.a Gomoku game.
 
