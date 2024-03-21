@@ -1,5 +1,5 @@
 # Caro
-## A project for Project-1-hust-20231
+## A project for Project I HUST 20231
 
 ## Trying to use Reinforcement Learning and success
 
