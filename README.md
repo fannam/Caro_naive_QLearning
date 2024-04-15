@@ -11,5 +11,5 @@ Although I think the hash approach is kind of risky but with a pretty large boar
 
 I trained them to play with a specific style. It's a sort of heuristics which is playing the moves that are neighbour with the 'fighting'. I know it's not optimal but it helped me training the agents much faster.
 
-I use complete search to check the specific moves to win or defense as well. I think it makes sense because in this game, we always block the potential 4 in a row imediately if that 4 in a row is opened two side. The 'AI part' is only the strategy of play.
+I use brute-force search to check the specific moves to win or defense as well. I think it makes sense because in this game, we always block the potential 4 in a row imediately if that 4 in a row is opened two side. The 'AI part' is only the playing strategy.
 
